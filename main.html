@@ -25,7 +25,6 @@
         <link rel="manifest" href="img/favicon/site.webmanifest">
         <!-- ------- Google analytics ------- -->
         <!-- ------- fonts ------- -->
-        <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
         <!-- ------- css ------- -->
         <link href="css/style.css" rel="stylesheet">
         <!-- ------- js ------- -->
@@ -51,20 +50,14 @@
             }
 //------- document.ready
             $(document).ready(() => {
-                //------- resizing
-                //--- calling adaptative functions
-                $(window).on("resize", () => {
-                    screenW = $(window).width();
-                    screenH = $(window).height();
-                    resizeBoard();
-                }).trigger("resize");
-                //--- resizing id:board canvas
-                function resizeBoard() {
-                    $("#board").css({
-                        width: screenW - 50,
-                        height: screenH - 50
-                    });
-                }
+                //------- setting the board
+                var board = new Plane(document.getElementById("board"));
+                //--- setting some properties
+                board.setPixelRatio(10);
+                board.setFontSize("16")
+                //--- drawing
+                board.drawGrid();
+                board.writeGridNumbers();
             });
         </script>
 <!-- ---------------- /body ---------------- -->
