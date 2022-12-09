@@ -54,10 +54,15 @@
                 var board = new Plane(document.getElementById("board"));
                 //--- setting some properties
                 board.setPixelRatio(10);
-                board.setFontSize("16")
+                board.setFontSize("16");
                 //--- drawing
                 board.drawGrid();
                 board.writeGridNumbers();
+                //--- adding points
+                for (let i = 0; i < 100; i += 0.01) {
+                    board.addPoint(i, i**2);
+                }
+                board.connectPoints();
             });
         </script>
 <!-- ---------------- /body ---------------- -->

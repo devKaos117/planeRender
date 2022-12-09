@@ -27,13 +27,15 @@ class Plane {
         // setting origin position
         this.originX = (this.canvas.width / 2);
         this.originY = (this.canvas.height / 2);
+        // setting points list
+        this.points = [];
     }
     //------- configuration methods
     /**
      * 
      */
      setPixelRatio(ratio) {
-        if (!parseFloat(ratio)) {
+        if (isNaN(parseFloat(ratio))) {
             throw "Parameter must be a number";
         }
         this.pixelRatio = parseFloat(ratio);
@@ -43,7 +45,7 @@ class Plane {
      * 
      */
     setNumberStep(lenght) {
-        if (!parseFloat(lenght)) {
+        if (isNaN(parseFloat(lenght))) {
             throw "Parameter must be a number";
         }
         this.numberStep = parseFloat(lenght);
@@ -52,7 +54,7 @@ class Plane {
      * 
      */
     setPixelStep(lenght) {
-        if (!parseInt(lenght)) {
+        if (isNaN(parseInt(lenght))) {
             throw "Parameter must be a number";
         }
         this.pixelStep = parseInt(lenght);
@@ -103,12 +105,77 @@ class Plane {
      * 
      */
     setFontSize(size) {
-        if (!parseInt(size)) {
+        if (isNaN(parseInt(size))) {
             throw "Parameter must be an integer";
         }
         this.fontSize = parseInt(size);
     }
+    //------- points control methods
+    /**
+     * 
+     */
+    addPoint(x, y) {
+        if (isNaN(parseFloat(x)) || isNaN(parseFloat(y))) {
+            throw "Parameter must be a number";
+        }
+        if (this.points.indexOf({"x": parseFloat(x), "y": parseFloat(y)}) != -1) {
+            return null;
+        }
+        this.points.push({"x": parseFloat(x), "y": parseFloat(y)});
+    }
+    /**
+     * 
+     */
+    removePoint(x, y) {
+        if (isNaN(parseFloat(x)) || isNaN(parseFloat(y))) {
+            throw "Parameter must be a number";
+        }
+        this.points.splice(this.points.indexOf({"x": parseFloat(x), "y": parseFloat(y)}), 1);
+    }
+    /**
+     * 
+     */
+    orderPoints() {
+        this.points.sort((a, b) => {
+            if (a["x"] != b["x"]) {
+                return a["x"] - b["x"];
+            } else {
+                return a["y"] - b["y"];
+            }
+        });
+    }
+    /**
+     * 
+     */
+    clearPoints() {
+        this.points = [];
+    }
     //------- render methods
+    /**
+     * 
+     */
+    drawPoints() {
+        this.points.forEach(point => {
+            let pixelCoordinates = this.gridToPixels(point["x"], point["y"]);
+            this.drawPoint(pixelCoordinates["x"], pixelCoordinates["y"]);
+        });
+    }
+    /**
+     * 
+     */
+    connectPoints() {
+        this.orderPoints();
+        this.points.forEach((point, idx, arr) => {
+            if (typeof arr[(idx + 1)] === "undefined") {
+                return null;
+            }
+            let pixelCoordinates = {
+                "thisPoint": this.gridToPixels(point["x"], point["y"]),
+                "nextPoint": this.gridToPixels(arr[(idx + 1)]["x"], arr[(idx + 1)]["y"])
+            };
+            this.drawLine(pixelCoordinates["thisPoint"]["x"], pixelCoordinates["thisPoint"]["y"], pixelCoordinates["nextPoint"]["x"], pixelCoordinates["nextPoint"]["y"], this.axisColor);
+        });
+    }
     /**
      * 
      */
@@ -118,6 +185,15 @@ class Plane {
         this.ctx.moveTo(x0,y0);
         this.ctx.lineTo(xf,yf);
         this.ctx.stroke();
+    }
+    /**
+     * 
+     */
+    drawPoint(x, y) {
+        this.ctx.fillStyle = this.axisColor;
+        this.ctx.beginPath();
+        this.ctx.arc(x, y, (this.pixelStep / 10), 0, Math.PI * 2);
+        this.ctx.fill();
     }
     /**
      * 
@@ -141,8 +217,8 @@ class Plane {
         this.ctx.textAlign = "right";
         this.ctx.textBaseline = "middle";
         for (let i = this.pixelStep; i < gridHeight ; i += this.pixelStep) {
-            this.ctx.fillText((i / this.pixelStep * this.numberStep), gridWidth - 2, (gridHeight + i));
-            this.ctx.fillText((-i / this.pixelStep * this.numberStep), gridWidth - 2, (gridHeight - i));
+            this.ctx.fillText((-i / this.pixelStep * this.numberStep), gridWidth - 2, (gridHeight + i));
+            this.ctx.fillText((i / this.pixelStep * this.numberStep), gridWidth - 2, (gridHeight - i));
         }
     }
     /**
@@ -178,13 +254,13 @@ class Plane {
      * 
      */
     gridToPixels(x, y) {
-        return {"x": (((x / this.numberStep) * this.pixelStep) + this.originX), "y": (((y / this.numberStep) * this.pixelStep) - this.originY)};
+        return {"x": (((x / this.numberStep) * this.pixelStep) + this.originX), "y": (this.originY - ((y / this.numberStep) * this.pixelStep))};
     }
     /**
      * 
      */
     pixelsToGrid() {
-        return {"x": ((x - originX) / this.pixelStep) * this.numberStep,"y": ((originY - y) / this.pixelStep) * this.numberStep};
+        return {"x": ((x - originX) / this.pixelStep) * this.numberStep, "y": ((originY - y) / this.pixelStep) * this.numberStep};
     }
     //------- setting canvas resolution
     /**
