@@ -59,9 +59,10 @@
                 board.drawGrid();
                 board.writeGridNumbers();
                 //--- adding points
-                for (let i = 0; i < 100; i += 0.01) {
-                    board.addPoint(i, i**2);
+                for (let i = 0; i < 100; i += 1) {
+                    board.addPoint(i, i/2);
                 }
+                board.drawPoints();
                 board.connectPoints();
             });
         </script>

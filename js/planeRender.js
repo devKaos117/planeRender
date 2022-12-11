@@ -2,105 +2,71 @@
  * 
  */
 class Plane {
+    //------- class properties
+
     //------- class constructor
     constructor(canvas){
         //--- verifying parameter
         if (typeof canvas != "object" || canvas.tagName != "CANVAS") {
             throw "Parameter must be a canvas";
         }
-        //--- declaring attributes
         // starting the canvas
         this.canvas = canvas;
         this.ctx = canvas.getContext("2d");
-        // setting canvas DPi
-        this.viewportRect = this.canvas.getBoundingClientRect();
-        this.setPixelRatio(1);
-        // setting measurement units
+        // setting interfaces
+        this._planeScaling = new planeScaling(this, 1);
         this._measurements = new planeCoordinates(this, 1, 25);
-        // setting colors
-        this.setAxisColor(0, 0, 0, 1)
-        this.setGridColor(0, 0, 0, 0.5);
-        // setting font properties
-        this.setFont("arial");
-        this.setFontSize(8);
+        this._aesthetics = new planeAesthetics();
         // setting points list
         this.points = [];
     }
-    //------- configuration methods
+    //------- planeCoordinates interfaces
     /**
-     * 
-     */
-     setPixelRatio(ratio) {
-        if (isNaN(parseFloat(ratio))) {
-            throw "Parameter must be a number";
-        }
-        this.pixelRatio = parseFloat(ratio);
-        this.scaleCanvas();
-    }
-    /**
-     *  Calls a method to set the main axis growth index
+     *  Interface that calls a method to set the main axis growth index
      *  @param { number } n New index in which the axis values will grow
      */
     setNumberStep(n) {
         this._measurements.setNumberStep(n);
     }
     /**
-     *  Calls a method to set the pixel distance between each secondary grid line
+     *  Interface that calls a method to set the pixel distance between each secondary grid line
      * @param { number } n New pixel distance between the grid lines
      */
     setPixelStep(n) {
         this._measurements.setNumberStep(n);
     }
+    //------- planeAesthetics interfaces
     /**
      * 
      */
     setAxisColor(r, g, b, a) {
-        if (r < 0 || r > 255 || isNaN(Math.ceil(r))) {
-            throw "Red chanel parameter for axis color is not valid";
-        }
-        if (g < 0 || g > 255 || isNaN(Math.ceil(g))) {
-            throw "Green chanel parameter for axis color is not valid";
-        }
-        if (b < 0 || b > 255 || isNaN(Math.ceil(b))) {
-            throw "Blue chanel parameter for axis color is not valid";
-        }
-        if (a < 0 || a > 1) {
-            throw "Alpha chanel parameter for axis color is not valid";
-        }
-        this.axisColor = "rgba(" + Math.ceil(r) + ", " + Math.ceil(g) + ", " + Math.ceil(b) + ", " + a + ")";
+        this._aesthetics.setAxisColor(r, g, b, a);
     }
     /**
      * 
      */
     setGridColor(r, g, b, a) {
-        if (r < 0 || r > 255 || isNaN(Math.ceil(r))) {
-            throw "Red chanel parameter for grid color is not valid";
-        }
-        if (g < 0 || g > 255 || isNaN(Math.ceil(g))) {
-            throw "Green chanel parameter for grid color is not valid";
-        }
-        if (b < 0 || b > 255 || isNaN(Math.ceil(b))) {
-            throw "Blue chanel parameter for grid color is not valid";
-        }
-        if (a < 0 || a > 1) {
-            throw "Alpha chanel parameter for grid color is not valid";
-        }
-        this.gridColor = "rgba(" + Math.ceil(r) + ", " + Math.ceil(g) + ", " + Math.ceil(b) + ", " + a + ")";
+        this._aesthetics.setGridColor(r, g, b, a);
     }
     /**
      * 
      */
     setFont(font) {
-        this.font = font;
+        this._aesthetics.setFont(font);
     }
     /**
      * 
      */
-    setFontSize(size) {
-        if (isNaN(parseInt(size))) {
-            throw "Parameter must be an integer";
-        }
-        this.fontSize = parseInt(size);
+    setFontSize(n) {
+        this._aesthetics.setFontSize(n);
+    }
+    //------- planeScaling interfaces
+    /**
+     *  Interface that calls a method to set the plane pixel ratio
+     *  @param { number } n pixel ratio
+     */
+    setPixelRatio(n) {
+        this._planeScaling.setPixelRatio(n);
     }
     //------- points control methods
     /**
@@ -191,8 +157,8 @@ class Plane {
         this.ctx.direction = "ltr";
         this.ctx.fillStyle = this.gridColor;
         //--- setting grid size relative to the scale
-        let gridWidth = this.viewportRect.width - this._measurements.originX;
-        let gridHeight = this.viewportRect.height - this._measurements.originY;
+        let gridWidth = this._planeScaling.viewportRect.width - this._measurements.originX;
+        let gridHeight = this._planeScaling.viewportRect.height - this._measurements.originY;
         //--- looping the x-grid
         this.ctx.textAlign = "center";
         this.ctx.textBaseline = "top";
@@ -216,16 +182,16 @@ class Plane {
         this.drawLine(this._measurements.originX, 0, this._measurements.originX, this.canvas.height, this.axisColor);
         this.drawLine(0, this._measurements.originY, this.canvas.width, this._measurements.originY, this.axisColor);
         //--- x-grid
-        let gridWidth = this.viewportRect.width - this._measurements.originX;
+        let gridWidth = this._planeScaling.viewportRect.width - this._measurements.originX;
         for (let i = this._measurements.pixelStep; i < gridWidth ; i += this._measurements.pixelStep) {
-            this.drawLine(gridWidth + i, 0, gridWidth + i, this.viewportRect.height, this.gridColor);
-            this.drawLine(gridWidth - i, 0, gridWidth - i, this.viewportRect.height, this.gridColor);
+            this.drawLine(gridWidth + i, 0, gridWidth + i, this._planeScaling.viewportRect.height, this.gridColor);
+            this.drawLine(gridWidth - i, 0, gridWidth - i, this._planeScaling.viewportRect.height, this.gridColor);
         }
         //--- y-grid
-        let gridHeight = this.viewportRect.height - this._measurements.originY;
+        let gridHeight = this._planeScaling.viewportRect.height - this._measurements.originY;
         for (let i = this._measurements.pixelStep; i < gridHeight ; i += this._measurements.pixelStep) {
-            this.drawLine(0, gridHeight + i, this.viewportRect.width, gridHeight + i, this.gridColor);
-            this.drawLine(0, gridHeight - i, this.viewportRect.width, gridHeight - i, this.gridColor);
+            this.drawLine(0, gridHeight + i, this._planeScaling.viewportRect.width, gridHeight + i, this.gridColor);
+            this.drawLine(0, gridHeight - i, this._planeScaling.viewportRect.width, gridHeight - i, this.gridColor);
         }
     }
     /**
@@ -236,21 +202,16 @@ class Plane {
         this.drawGrid();
         this.writeGridNumbers();
     }
-    //------- setting canvas resolution
-    /**
-     * 
-     */
-    scaleCanvas() {
-        this.canvas.width = this.viewportRect.width * this.pixelRatio;
-        this.canvas.height = this.viewportRect.height * this.pixelRatio;
-        this.ctx.scale(this.pixelRatio, this.pixelRatio);
-    }
-    //------- end of Plane class
+//------- end of Plane class
 }
+
+
+
 /**
  *  Class to deal with the coordinates and mesurements of the plane calculations
  */
 class planeCoordinates {
+    //------- class properties
     plane;
     originX;
     originY;
@@ -259,6 +220,9 @@ class planeCoordinates {
     //------- class constructor
     constructor(plane, numberStep = 1, pixelStep = 25) {
         // saving the plane object access
+        if (typeof plane != "object") {
+            throw "plane parameter must be an object";
+        }
         this.plane = plane;
         // calculating the inicial values for the origin position
         this.findOrigin();
@@ -268,7 +232,7 @@ class planeCoordinates {
     }
     //------- calculating the origins position
     /**
-     *  Calculates the pixel coordinates for the plane origin and ascribe it to the originX and originY paramethers
+     *  Calculates the pixel coordinates for the plane origin and ascribes it to the originX and originY properties
      */
     findOrigin() {
         this.originX = (this.plane.canvas.width / 2);
@@ -276,7 +240,7 @@ class planeCoordinates {
     }
     //------- setting methods
     /**
-     *  Verifies if the given value is a number and then ascribe it to the numberStep paramether
+     *  Verifies if the given value is a number and then ascribes it to the numberStep property
      *  @param { number } lenght Default value = 1
      */
     setNumberStep(lenght = 1) {
@@ -286,7 +250,7 @@ class planeCoordinates {
         this.numberStep = parseFloat(lenght);
     }
     /**
-     *  Verifies if the given value is a number and then ascribe it to the pixelStep paramether
+     *  Verifies if the given value is a number and then ascribes it to the pixelStep property
      *  @param { number } lenght Default value = 25
      */
     setPixelStep(lenght = 25) {
@@ -340,5 +304,137 @@ class planeCoordinates {
         }
         return (((this.originY - y) / this.pixelStep) * this.numberStep);
     }
-    //------- end of planeMeasurements class
+//------- end of planeMeasurements class
+}
+
+
+
+/**
+ * 
+ */
+class planeAesthetics {
+    //------- class properties
+    axisColor;
+    gridColor;
+    font;
+    fontSize;
+    //------- class constructor
+    constructor() {
+        // setting colors
+        this.setAxisColor(0, 0, 0, 1)
+        this.setGridColor(0, 0, 0, 0.5);
+        // setting font properties
+        this.setFont("arial");
+        this.setFontSize(8);
+    }
+    //------- aesthetics setting methods
+    /**
+     *  Verifies the validity of the given parameters and then ascribes the new rgba color to the axisColor property
+     *  @param { number } r red chanel value
+     *  @param { number } g green chanel value
+     *  @param { number } b blue chanel value
+     *  @param { number } a alpha chanel value
+     */
+    setAxisColor(r, g, b, a) {
+        if (r < 0 || r > 255 || isNaN(Math.ceil(r))) {
+            throw "Red chanel parameter for axis color is not valid";
+        }
+        if (g < 0 || g > 255 || isNaN(Math.ceil(g))) {
+            throw "Green chanel parameter for axis color is not valid";
+        }
+        if (b < 0 || b > 255 || isNaN(Math.ceil(b))) {
+            throw "Blue chanel parameter for axis color is not valid";
+        }
+        if (a < 0 || a > 1) {
+            throw "Alpha chanel parameter for axis color is not valid";
+        }
+        this.axisColor = "rgba(" + Math.ceil(r) + ", " + Math.ceil(g) + ", " + Math.ceil(b) + ", " + a + ")";
+    }
+    /**
+     *  Verifies the validity of the given parameters and then ascribes the new rgba color to the gridColor property
+     *  @param { number } r red chanel value
+     *  @param { number } g green chanel value
+     *  @param { number } b blue chanel value
+     *  @param { number } a alpha chanel value
+     */
+    setGridColor(r, g, b, a) {
+        if (r < 0 || r > 255 || isNaN(Math.ceil(r))) {
+            throw "Red chanel parameter for grid color is not valid";
+        }
+        if (g < 0 || g > 255 || isNaN(Math.ceil(g))) {
+            throw "Green chanel parameter for grid color is not valid";
+        }
+        if (b < 0 || b > 255 || isNaN(Math.ceil(b))) {
+            throw "Blue chanel parameter for grid color is not valid";
+        }
+        if (a < 0 || a > 1) {
+            throw "Alpha chanel parameter for grid color is not valid";
+        }
+        this.gridColor = "rgba(" + Math.ceil(r) + ", " + Math.ceil(g) + ", " + Math.ceil(b) + ", " + a + ")";
+    }
+    /**
+     *  Verifies if the given parameter is a string and then ascribes it to the font property
+     *  @param { string } font font name
+     */
+    setFont(font) {
+        if (typeof font !== "string") {
+            throw "parameter must be a string";
+        }
+        this.font = font;
+    }
+    /**
+     *  Verifies if the given parameter is an integer and then ascribes it to the fontSize property
+     *  @param { number } size new font size
+     */
+    setFontSize(size) {
+        if (isNaN(parseInt(size))) {
+            throw "Parameter must be an integer";
+        }
+        this.fontSize = parseInt(size);
+    }
+//------- end of planeAesthetics class
+}
+
+
+
+/**
+ * 
+ */
+class planeScaling {
+    //------- class properties
+    plane;
+    viewportRect;
+    _pixelRatio;
+    //------- class constructor
+    constructor(plane, ratio) {
+        // saving the plane object access
+        if (typeof plane != "object") {
+            throw "plane parameter must be an object";
+        }
+        this.plane = plane;
+        // setting initial values
+        this.viewportRect = this.plane.canvas.getBoundingClientRect();
+        this.setPixelRatio(ratio);
+    }
+    //------- canvas scaling methods
+    /**
+     *  Verifies if the given value is a number and the ascribes it to the pixelRatio property, then re-scaling the canvas
+     *  @param { number } The pixel ratio for scaling
+     */
+    setPixelRatio(ratio) {
+        if (isNaN(parseFloat(ratio))) {
+            throw "Parameter must be a number";
+        }
+        this._pixelRatio = parseFloat(ratio);
+        this.scaleCanvas();
+    }
+    /**
+     *  Sets the canvas width and height according to the scaling resolution set up and then re-scale it
+     */
+    scaleCanvas() {
+        this.plane.canvas.width = this.viewportRect.width * this._pixelRatio;
+        this.plane.canvas.height = this.viewportRect.height * this._pixelRatio;
+        this.plane.ctx.scale(this._pixelRatio, this._pixelRatio);
+    }
+//------- end of planescaling class
 }
