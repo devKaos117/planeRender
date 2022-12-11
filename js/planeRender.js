@@ -16,17 +16,13 @@ class Plane {
         this.viewportRect = this.canvas.getBoundingClientRect();
         this.setPixelRatio(1);
         // setting measurement units
-        this.setNumberStep(1);
-        this.setPixelStep(25);
+        this._measurements = new planeCoordinates(this, 1, 25);
         // setting colors
         this.setAxisColor(0, 0, 0, 1)
         this.setGridColor(0, 0, 0, 0.5);
         // setting font properties
         this.setFont("arial");
         this.setFontSize(8);
-        // setting origin position
-        this.originX = (this.canvas.width / 2);
-        this.originY = (this.canvas.height / 2);
         // setting points list
         this.points = [];
     }
@@ -42,22 +38,18 @@ class Plane {
         this.scaleCanvas();
     }
     /**
-     * 
+     *  Calls a method to set the main axis growth index
+     *  @param { number } n New index in which the axis values will grow
      */
-    setNumberStep(lenght) {
-        if (isNaN(parseFloat(lenght))) {
-            throw "Parameter must be a number";
-        }
-        this.numberStep = parseFloat(lenght);
+    setNumberStep(n) {
+        this._measurements.setNumberStep(n);
     }
     /**
-     * 
+     *  Calls a method to set the pixel distance between each secondary grid line
+     * @param { number } n New pixel distance between the grid lines
      */
-    setPixelStep(lenght) {
-        if (isNaN(parseInt(lenght))) {
-            throw "Parameter must be a number";
-        }
-        this.pixelStep = parseInt(lenght);
+    setPixelStep(n) {
+        this._measurements.setNumberStep(n);
     }
     /**
      * 
@@ -156,8 +148,7 @@ class Plane {
      */
     drawPoints() {
         this.points.forEach(point => {
-            let pixelCoordinates = this.gridToPixels(point["x"], point["y"]);
-            this.drawPoint(pixelCoordinates["x"], pixelCoordinates["y"]);
+            this.drawPoint(this._measurements.gridToPixelsX(point["x"]), this._measurements.gridToPixelsY(point["y"]));
         });
     }
     /**
@@ -169,11 +160,7 @@ class Plane {
             if (typeof arr[(idx + 1)] === "undefined") {
                 return null;
             }
-            let pixelCoordinates = {
-                "thisPoint": this.gridToPixels(point["x"], point["y"]),
-                "nextPoint": this.gridToPixels(arr[(idx + 1)]["x"], arr[(idx + 1)]["y"])
-            };
-            this.drawLine(pixelCoordinates["thisPoint"]["x"], pixelCoordinates["thisPoint"]["y"], pixelCoordinates["nextPoint"]["x"], pixelCoordinates["nextPoint"]["y"], this.axisColor);
+            this.drawLine(this._measurements.gridToPixelsX(point["x"]), this._measurements.gridToPixelsY(point["y"]), this._measurements.gridToPixelsX(arr[(idx + 1)]["x"]), this._measurements.gridToPixelsY(arr[(idx + 1)]["y"]), this.axisColor);
         });
     }
     /**
@@ -192,7 +179,7 @@ class Plane {
     drawPoint(x, y) {
         this.ctx.fillStyle = this.axisColor;
         this.ctx.beginPath();
-        this.ctx.arc(x, y, (this.pixelStep / 10), 0, Math.PI * 2);
+        this.ctx.arc(x, y, (this._measurements.pixelStep / 10), 0, Math.PI * 2);
         this.ctx.fill();
     }
     /**
@@ -204,21 +191,21 @@ class Plane {
         this.ctx.direction = "ltr";
         this.ctx.fillStyle = this.gridColor;
         //--- setting grid size relative to the scale
-        let gridWidth = this.viewportRect.width - this.originX;
-        let gridHeight = this.viewportRect.height - this.originY;
+        let gridWidth = this.viewportRect.width - this._measurements.originX;
+        let gridHeight = this.viewportRect.height - this._measurements.originY;
         //--- looping the x-grid
         this.ctx.textAlign = "center";
         this.ctx.textBaseline = "top";
-        for (let i = this.pixelStep; i < gridWidth ; i += this.pixelStep) {
-            this.ctx.fillText((i / this.pixelStep * this.numberStep), (gridWidth + i), gridHeight + 2);
-            this.ctx.fillText((-i / this.pixelStep * this.numberStep), (gridWidth - i), gridHeight + 2);
+        for (let i = this._measurements.pixelStep; i < gridWidth ; i += this._measurements.pixelStep) {
+            this.ctx.fillText((i / this._measurements.pixelStep * this._measurements.numberStep), (gridWidth + i), gridHeight + 2);
+            this.ctx.fillText((-i / this._measurements.pixelStep * this._measurements.numberStep), (gridWidth - i), gridHeight + 2);
         }
         //--- looping the y-grid
         this.ctx.textAlign = "right";
         this.ctx.textBaseline = "middle";
-        for (let i = this.pixelStep; i < gridHeight ; i += this.pixelStep) {
-            this.ctx.fillText((-i / this.pixelStep * this.numberStep), gridWidth - 2, (gridHeight + i));
-            this.ctx.fillText((i / this.pixelStep * this.numberStep), gridWidth - 2, (gridHeight - i));
+        for (let i = this._measurements.pixelStep; i < gridHeight ; i += this._measurements.pixelStep) {
+            this.ctx.fillText((-i / this._measurements.pixelStep * this._measurements.numberStep), gridWidth - 2, (gridHeight + i));
+            this.ctx.fillText((i / this._measurements.pixelStep * this._measurements.numberStep), gridWidth - 2, (gridHeight - i));
         }
     }
     /**
@@ -226,17 +213,17 @@ class Plane {
      */
     drawGrid() {
         //--- axis
-        this.drawLine(this.originX, 0, this.originX, this.canvas.height, this.axisColor);
-        this.drawLine(0, this.originY, this.canvas.width, this.originY, this.axisColor);
+        this.drawLine(this._measurements.originX, 0, this._measurements.originX, this.canvas.height, this.axisColor);
+        this.drawLine(0, this._measurements.originY, this.canvas.width, this._measurements.originY, this.axisColor);
         //--- x-grid
-        let gridWidth = this.viewportRect.width - this.originX;
-        for (let i = this.pixelStep; i < gridWidth ; i += this.pixelStep) {
+        let gridWidth = this.viewportRect.width - this._measurements.originX;
+        for (let i = this._measurements.pixelStep; i < gridWidth ; i += this._measurements.pixelStep) {
             this.drawLine(gridWidth + i, 0, gridWidth + i, this.viewportRect.height, this.gridColor);
             this.drawLine(gridWidth - i, 0, gridWidth - i, this.viewportRect.height, this.gridColor);
         }
         //--- y-grid
-        let gridHeight = this.viewportRect.height - this.originY;
-        for (let i = this.pixelStep; i < gridHeight ; i += this.pixelStep) {
+        let gridHeight = this.viewportRect.height - this._measurements.originY;
+        for (let i = this._measurements.pixelStep; i < gridHeight ; i += this._measurements.pixelStep) {
             this.drawLine(0, gridHeight + i, this.viewportRect.width, gridHeight + i, this.gridColor);
             this.drawLine(0, gridHeight - i, this.viewportRect.width, gridHeight - i, this.gridColor);
         }
@@ -249,19 +236,6 @@ class Plane {
         this.drawGrid();
         this.writeGridNumbers();
     }
-    //------- unit conversion tools
-    /**
-     * 
-     */
-    gridToPixels(x, y) {
-        return {"x": (((x / this.numberStep) * this.pixelStep) + this.originX), "y": (this.originY - ((y / this.numberStep) * this.pixelStep))};
-    }
-    /**
-     * 
-     */
-    pixelsToGrid() {
-        return {"x": ((x - originX) / this.pixelStep) * this.numberStep, "y": ((originY - y) / this.pixelStep) * this.numberStep};
-    }
     //------- setting canvas resolution
     /**
      * 
@@ -271,4 +245,100 @@ class Plane {
         this.canvas.height = this.viewportRect.height * this.pixelRatio;
         this.ctx.scale(this.pixelRatio, this.pixelRatio);
     }
+    //------- end of Plane class
+}
+/**
+ *  Class to deal with the coordinates and mesurements of the plane calculations
+ */
+class planeCoordinates {
+    plane;
+    originX;
+    originY;
+    numberStep;
+    pixelStep;
+    //------- class constructor
+    constructor(plane, numberStep = 1, pixelStep = 25) {
+        // saving the plane object access
+        this.plane = plane;
+        // calculating the inicial values for the origin position
+        this.findOrigin();
+        // setting inicial values
+        this.setNumberStep(numberStep);
+        this.setPixelStep(pixelStep);
+    }
+    //------- calculating the origins position
+    /**
+     *  Calculates the pixel coordinates for the plane origin and ascribe it to the originX and originY paramethers
+     */
+    findOrigin() {
+        this.originX = (this.plane.canvas.width / 2);
+        this.originY = (this.plane.canvas.height / 2);
+    }
+    //------- setting methods
+    /**
+     *  Verifies if the given value is a number and then ascribe it to the numberStep paramether
+     *  @param { number } lenght Default value = 1
+     */
+    setNumberStep(lenght = 1) {
+        if (isNaN(parseFloat(lenght))) {
+            throw "Parameter must be a number";
+        }
+        this.numberStep = parseFloat(lenght);
+    }
+    /**
+     *  Verifies if the given value is a number and then ascribe it to the pixelStep paramether
+     *  @param { number } lenght Default value = 25
+     */
+    setPixelStep(lenght = 25) {
+        if (isNaN(parseInt(lenght))) {
+            throw "Parameter must be a number";
+        }
+        this.pixelStep = parseInt(lenght);
+    }
+    //------- unit conversion tools
+    /**
+     *  Verifies if the given value is a number and then converts it from plane coordinates to pixel coordinates in the X axis
+     *  @param { number } x x plane coordinate
+     *  @returns { number } x pixel coordinates
+     */
+    gridToPixelsX(x) {
+        if (isNaN(parseFloat(x))) {
+            throw "Parameter must be a number";
+        }
+        return (((x / this.numberStep) * this.pixelStep) + this.originX);
+    }
+    /**
+     *  Verifies if the given value is a number and then converts it from plane coordinates to pixel coordinates in the Y axis
+     *  @param { number } y y plane coordinate
+     *  @returns { number } y pixel coordinates
+     */
+    gridToPixelsY(y) {
+        if (isNaN(parseFloat(y))) {
+            throw "Parameter must be a number";
+        }
+        return (this.originY - ((y / this.numberStep) * this.pixelStep));
+    }
+    /**
+     *  Verifies if the given value is a number and then converts it from pixel coordinates to plane coordinates in the X axis
+     *  @param { number } x x pixel coordinate
+     *  @returns { number } x plane coordinates
+     */
+    pixelsToGridX(x) {
+        if (isNaN(parseFloat(x))) {
+            throw "Parameter must be a number";
+        }
+        return (((x - this.originX) / this.pixelStep) * this.numberStep);
+    }
+    /**
+     *  Verifies if the given value is a number and then converts it from pixel coordinates to plane coordinates in the Y axis
+     *  @param { number } y y pixel coordinate
+     *  @returns { number } y plane coordinates
+     */
+    pixelsToGridY(y) {
+        if (isNaN(parseFloat(y))) {
+            throw "Parameter must be a number";
+        }
+        return (((this.originY - y) / this.pixelStep) * this.numberStep);
+    }
+    //------- end of planeMeasurements class
 }
