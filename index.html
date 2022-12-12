@@ -37,7 +37,7 @@
     <body>
 <!-- ---------------- body ---------------- -->
         <!-- ------- main ------- -->
-        <canvas id="board"></canvas>
+        <canvas id="board" class="plane"></canvas>
         <!-- ------- script ------- -->
         <script>
 //------- screen
@@ -58,11 +58,12 @@
                 //--- drawing
                 board.drawGrid();
                 //--- adding points
-                for (let i = 0; i < 100; i += 1) {
-                    board.addPoint(i, i/2);
-                }
-                board.drawPoints();
-                board.connectPoints();
+                $("#board").on("click", (e) => {
+                    let x = parseFloat($("#board").css("margin-left"));
+                    let y = parseFloat($("#board").css("margin-top"));
+                    board.addPoint(board.pixelsToGridX(e.pageX - x), board.pixelsToGridY(e.pageY - y));
+                    board.connectPoints();
+                });
             });
         </script>
 <!-- ---------------- /body ---------------- -->

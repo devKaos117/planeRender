@@ -71,6 +71,22 @@ class Plane {
     setPixelStep(n) {
         this._interface.coordinatesInterface.setPixelStep(n);
     }
+    /**
+     *  Converts the given number from it from pixel coordinates to plane coordinates in the X axis
+     *  @param { number } x x pixel coordinate
+     *  @returns { number } x plane coordinates
+     */
+    pixelsToGridX(x) {
+        return this._interface.coordinatesInterface.pixelsToGridX(x);
+    }
+    /**
+     *  Converts the given number from it from pixel coordinates to plane coordinates in the Y axis
+     *  @param { number } y y pixel coordinate
+     *  @returns { number } y plane coordinates
+     */
+    pixelsToGridY(y) {
+        return this._interface.coordinatesInterface.pixelsToGridY(y);
+    }
     //------- planePoints methods
     /**
      *  Adds a point in the plane
@@ -115,10 +131,19 @@ class Plane {
     connectPoints() {
         this._interface.connectPoints();
     }
+    /**
+     *  Clear the plane and re-draw the axis and grid lines and numbers
+     */
+    clearAll() {
+        this._interface.clearAll();
+    }
 //------- end of class Plane
 }
 /**
- * 
+ *  Class responsible for re-scaling and dealing with the canvas DPI
+ *  @param { object } canvas canvas access
+ *  @param { object } ctx canvas context
+ *  @param { number } ratio canvas pixel ratio
  */
 class planeScaling {
     //------- properties
@@ -158,7 +183,7 @@ class planeScaling {
 //------- end of class planeScaling
 }
 /**
- * 
+ *  Class responsible for dealing with the colors and font for the plane
  */
 class planeAesthetics {
     //------- properties
@@ -243,7 +268,10 @@ class planeAesthetics {
 //------- end of class planeAesthetics
 }
 /**
- * 
+ *  Class responsible for dealing with the plane coordinates and measurements
+ *  @param { object } canvas canvas access
+ *  @param { number } numberStep main axis growth index
+ *  @param { number } pixelStep distance between each secondary grid line
  */
 class planeCoordinates {
     //------- properties
@@ -269,6 +297,19 @@ class planeCoordinates {
     findOrigin() {
         this.originX = (this.canvas.width / 2);
         this.originY = (this.canvas.height / 2);
+    }
+    /**
+     *  Checks if the given coordinates are inside the visible plane
+     *  @param { number } x x coordinates
+     *  @param { number } y y coordinates
+     *  @param { number } margin margin of error
+     *  @returns { boolean } result
+     */
+    isLeaking(x, y, margin = 0) {
+        let viewport = this.canvas.getBoundingClientRect();
+        let w = viewport.width; 
+        let h = viewport.height;
+        return (x > w + margin || y > h + margin);
     }
     //------- setting methods
     /**
@@ -339,7 +380,7 @@ class planeCoordinates {
 //------- end of class planeCoordinates
 }
 /**
- * 
+ *  Class responsible for dealing with the plane points
  */
 class planePoints {
     //------- properties
@@ -396,7 +437,8 @@ class planePoints {
 //------- end of class planePoints
 }
 /**
- * 
+ *  Class responsible for drawing in the canvas and calling out other classes methods
+ *  @param { object } canvas canvas access
  */
 class planeInterface {
     //------- properties
@@ -427,6 +469,11 @@ class planeInterface {
      *  @param { string } color line color
      */
     drawLine(x0, y0, xf, yf, color) {
+        // check if the line will be visible
+        if (this.coordinatesInterface.isLeaking(x0, y0) && this.coordinatesInterface.isLeaking(xf, yf)) {
+            return null;
+        }
+        // draw the line
         this.ctx.beginPath();
         this.ctx.strokeStyle = color;
         this.ctx.moveTo(x0,y0);
@@ -439,6 +486,11 @@ class planeInterface {
      *  @param { number } y y coordinate
      */
     drawPoint(x, y) {
+        // check if the point is visible
+        if (this.coordinatesInterface.isLeaking(x, y, (this.coordinatesInterface.pixelStep / 10))) {
+            return null;
+        }
+        // draw the point
         this.ctx.fillStyle = this.aestheticsInterface.axisColor;
         this.ctx.beginPath();
         this.ctx.arc(x, y, (this.coordinatesInterface.pixelStep / 10), 0, Math.PI * 2);
@@ -499,6 +551,9 @@ class planeInterface {
      *  Draws the plane points
      */
     drawPoints() {
+        // clear the plane
+        this.clearAll();
+        // draw the points
         this.pointsInterface.pointsList.forEach(point => {
             this.drawPoint(this.coordinatesInterface.gridToPixelsX(point["x"]), this.coordinatesInterface.gridToPixelsY(point["y"]));
         });
@@ -507,6 +562,9 @@ class planeInterface {
      *  Draws lines between the plane points
      */
     connectPoints() {
+        // clears the plane
+        this.clearAll();
+        // draw the lines  
         this.pointsInterface.orderPoints();
         this.pointsInterface.pointsList.forEach((point, idx, arr) => {
             if (typeof arr[(idx + 1)] === "undefined") {
