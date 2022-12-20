@@ -1,4 +1,4 @@
-# planeRender (README.md em construção)
+# planeRender ![v1.1](https://img.shields.io/badge/version-1.1-informational)
 
 ## Índice
 
