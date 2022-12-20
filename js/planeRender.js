@@ -209,16 +209,16 @@ class planeAesthetics {
      *  @param { number } a alpha chanel value
      */
     setAxisColor(r, g, b, a) {
-        if (r < 0 || r > 255 || isNaN(Math.ceil(r))) {
+        if (r < 0 || r >= 255 || isNaN(Math.ceil(r))) {
             throw "Red chanel parameter for axis color is not valid";
         }
-        if (g < 0 || g > 255 || isNaN(Math.ceil(g))) {
+        if (g < 0 || g >= 255 || isNaN(Math.ceil(g))) {
             throw "Green chanel parameter for axis color is not valid";
         }
-        if (b < 0 || b > 255 || isNaN(Math.ceil(b))) {
+        if (b < 0 || b >= 255 || isNaN(Math.ceil(b))) {
             throw "Blue chanel parameter for axis color is not valid";
         }
-        if (a < 0 || a > 1) {
+        if (a < 0 || a >= 1) {
             throw "Alpha chanel parameter for axis color is not valid";
         }
         this.axisColor = "rgba(" + Math.ceil(r) + ", " + Math.ceil(g) + ", " + Math.ceil(b) + ", " + a + ")";
@@ -231,16 +231,16 @@ class planeAesthetics {
      *  @param { number } a alpha chanel value
      */
     setGridColor(r, g, b, a) {
-        if (r < 0 || r > 255 || isNaN(Math.ceil(r))) {
+        if (r < 0 || r >= 255 || isNaN(Math.ceil(r))) {
             throw "Red chanel parameter for grid color is not valid";
         }
-        if (g < 0 || g > 255 || isNaN(Math.ceil(g))) {
+        if (g < 0 || g >= 255 || isNaN(Math.ceil(g))) {
             throw "Green chanel parameter for grid color is not valid";
         }
-        if (b < 0 || b > 255 || isNaN(Math.ceil(b))) {
+        if (b < 0 || b >= 255 || isNaN(Math.ceil(b))) {
             throw "Blue chanel parameter for grid color is not valid";
         }
-        if (a < 0 || a > 1) {
+        if (a < 0 || a >= 1) {
             throw "Alpha chanel parameter for grid color is not valid";
         }
         this.gridColor = "rgba(" + Math.ceil(r) + ", " + Math.ceil(g) + ", " + Math.ceil(b) + ", " + a + ")";
